@@ -1,67 +1,72 @@
-import JSZip from 'jszip';
-import { parseStringPromise } from 'xml2js';
+# UNOPOS Overnight Report Generator
 
-function pick(obj, names) {
-  for (const name of names) {
-    if (obj?.[name] != null) {
-      const value = Array.isArray(obj[name]) ? obj[name][0] : obj[name];
-      if (typeof value === 'object' && value?._) return String(value._).trim();
-      return String(value ?? '').trim();
-    }
-  }
-  return '';
-}
+Private Next.js app for uploading a daily HESK XML or ZIP export and generating an email-ready overnight support summary.
 
-function findTicketArrays(node, found = []) {
-  if (!node || typeof node !== 'object') return found;
-  for (const [key, value] of Object.entries(node)) {
-    if (Array.isArray(value)) {
-      if (key.toLowerCase().includes('ticket')) found.push(value);
-      value.forEach(v => findTicketArrays(v, found));
-    } else if (typeof value === 'object') {
-      findTicketArrays(value, found);
-    }
-  }
-  return found;
-}
+This version does **not** send email through Resend or any email provider. It creates a report that can be copied and pasted into Outlook/Gmail or downloaded as HTML/TXT for manual sending.
 
-function normalizeTicket(raw, index) {
-  const notes = pick(raw, ['message', 'messages', 'history', 'reply', 'replies', 'notes', 'dtl', 'body']);
-  const subject = pick(raw, ['subject', 'title']);
-  const issue = pick(raw, ['what', 'issue', 'problem']) || subject;
-  const merchant = pick(raw, ['name', 'merchant', 'customer', 'client']) || `Ticket ${index + 1}`;
+## What it does
 
-  return {
-    trackingId: pick(raw, ['trackid', 'tracking_id', 'trackingid', 'track', 'id']),
-    createdAt: pick(raw, ['dt', 'date', 'created', 'created_on', 'date_created']),
-    updatedAt: pick(raw, ['lastchange', 'updated', 'updated_on', 'date_updated']),
-    merchant,
-    contact: pick(raw, ['contact', 'who', 'person']),
-    phone: pick(raw, ['phone', 'phone_number', 'telephone']),
-    category: pick(raw, ['category', 'cat_name']),
-    priority: pick(raw, ['priority', 'priority_name']) || 'Not listed',
-    status: pick(raw, ['status', 'status_name']) || 'Not listed',
-    subject,
-    issue,
-    assignedTo: pick(raw, ['owner', 'assigned_to', 'assignedto', 'staff', 'name_assigned']) || 'Unassigned',
-    timeWorked: pick(raw, ['time_worked', 'timeworked', 'time_worked_formatted']) || '00:00:00',
-    notes
-  };
-}
+- Accepts HESK XML or ZIP exports
+- Extracts ticket fields
+- Applies POS/payments highlight rules
+- Builds an executive-style email body
+- Shows a preview in the browser
+- Provides:
+  - Copy formatted email body
+  - Download HTML file
+  - Download TXT file
 
-export async function extractXmlFromUpload(fileBuffer, fileName) {
-  if (fileName.toLowerCase().endsWith('.zip')) {
-    const zip = await JSZip.loadAsync(fileBuffer);
-    const xmlFileName = Object.keys(zip.files).find(name => name.toLowerCase().endsWith('.xml'));
-    if (!xmlFileName) throw new Error('No XML file found inside ZIP export.');
-    return await zip.files[xmlFileName].async('string');
-  }
-  return fileBuffer.toString('utf8');
-}
+## Setup
 
-export async function parseHeskExport(xmlText) {
-  const parsed = await parseStringPromise(xmlText, { explicitArray: true, mergeAttrs: true, trim: true });
-  const arrays = findTicketArrays(parsed).sort((a, b) => b.length - a.length);
-  const rawTickets = arrays[0] || [];
-  return rawTickets.map(normalizeTicket).filter(t => t.subject || t.merchant || t.trackingId);
-}
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Run locally:
+
+```bash
+npm run dev
+```
+
+3. Open:
+
+```text
+http://localhost:3000
+```
+
+## Daily workflow
+
+1. Export HESK tickets as XML or ZIP.
+2. Upload the file.
+3. Click **Generate Email Report**.
+4. Copy the subject.
+5. Click **Copy Formatted Email Body**.
+6. Paste into an email to Danny.
+7. Send manually.
+
+## Deploy to Vercel
+
+- Push this repo to GitHub.
+- Import into Vercel.
+- Protect the page with Vercel password protection or add authentication before production use.
+- No environment variables are required.
+
+## Highlight rules
+
+Tickets are promoted to Management Highlights when they contain operationally important terms such as:
+
+- internet outage
+- network down
+- EMV/card reader failure
+- payment terminal down
+- PAX device failure
+- online ordering issue
+- menu mapping causing wrong customer order
+- dispute/chargeback
+- refund failure
+- unassigned ticket
+- escalation/replacement/follow-up required
+
+All tickets are still included in the All Ticket Activity table.
