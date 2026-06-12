@@ -70,3 +70,36 @@ Tickets are promoted to Management Highlights when they contain operationally im
 - escalation/replacement/follow-up required
 
 All tickets are still included in the All Ticket Activity table.
+
+## Import formats supported
+
+This version accepts the following HESK exports:
+
+- `.xml`
+- `.zip` containing XML, Excel, or CSV
+- `.xlsx`
+- `.xls`
+- `.csv`
+
+All supported file types are normalized into the same ticket format before the report/highlight rules run.
+
+## Excel/CSV expected columns
+
+The Excel or CSV file should include as many of these columns as available:
+
+- Tracking ID
+- Date
+- Updated
+- Name
+- Category
+- Priority
+- Status
+- Subject
+- Owner
+- Time worked
+- Phone Number
+- City/State
+- Contact
+- Message
+
+The Message field can include HESK-style lines such as `Who`, `Role`, `What`, and `When`. The parser will use those to populate contact and issue details when separate columns are missing.

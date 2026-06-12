@@ -1,4 +1,4 @@
-import { extractXmlFromUpload, parseHeskExport } from '../../../lib/parseHeskExport';
+import { parseUploadedHeskFile } from '../../../lib/parseHeskExport';
 import { buildReportEmail } from '../../../lib/buildReportEmail';
 
 export const runtime = 'nodejs';
@@ -18,8 +18,7 @@ export async function POST(request) {
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const xmlText = await extractXmlFromUpload(buffer, file.name || 'upload.xml');
-    const tickets = await parseHeskExport(xmlText);
+    const tickets = await parseUploadedHeskFile(buffer, file.name || 'upload');
     const report = buildReportEmail(tickets);
 
     return Response.json({

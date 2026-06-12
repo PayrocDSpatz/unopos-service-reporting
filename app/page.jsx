@@ -25,7 +25,7 @@ export default function Home() {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!file) {
-      setStatus('Please select a HESK XML or ZIP export.');
+      setStatus('Please select a HESK XML, ZIP, Excel, or CSV export.');
       return;
     }
 
@@ -69,12 +69,12 @@ export default function Home() {
   return (
     <main style={{ maxWidth: 1100, margin: '40px auto', background: '#fff', padding: 30, borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,.08)' }}>
       <h1>UNOPOS Overnight Report Generator</h1>
-      <p>Upload the daily HESK XML or ZIP export. The app generates an email-ready report you can manually send to Danny.</p>
+      <p>Upload the daily HESK XML, ZIP, Excel, or CSV export. The app generates an email-ready report you can manually send to Danny.</p>
 
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16, marginTop: 24 }}>
         <label>
-          <strong>HESK Export XML or ZIP</strong><br />
-          <input type="file" accept=".xml,.zip" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+          <strong>HESK Export XML, ZIP, Excel, or CSV</strong><br />
+          <input type="file" accept=".xml,.zip,.xlsx,.xls,.csv" onChange={(e) => setFile(e.target.files?.[0] || null)} />
         </label>
 
         <button style={{ padding: 12, fontWeight: 700, cursor: 'pointer' }}>Generate Email Report</button>
